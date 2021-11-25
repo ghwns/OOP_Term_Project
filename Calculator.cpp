@@ -63,6 +63,7 @@ public:
 	}
 	bool executeOperator(const char& anOperator) {
 		if (this->stackForOperand.size() < 2) {
+			cout << "TOOFEWVALUE" << endl;
 			throw "Error";
 		}
 		double operand1 = this->stackForOperand.top();
@@ -90,6 +91,7 @@ public:
 			calculated = operand2 - operand1;
 			break;
 		default:
+			cout << "INVALIDOPERATOR" << endl;
 			return false;
 			break;
 		}
@@ -105,6 +107,7 @@ public:
 	string infixExpression;
 	string postfixExpression;
 	PostfixCalculator* postfixCalculator = new PostfixCalculator();
+	virtual bool infixToPostfix() = 0;
 	//식에서의 우선순위
 	int inComingPrecedence(const char& aToken) {
 		switch (aToken) {
@@ -126,7 +129,7 @@ public:
 	}
 	/*
 	 * 스택 안에서 '('는 우선순위가 가장 낮아 연산자를 모두 스택에 포함 ')'는 가장 우선순위가 높아 
-	 * 그 안을 모두 pop함 스택에 넣어지기위해서 연산자 '^'는 우선순위가 다르다.
+	 * 그 안을 모두 pop함
 	 */
 	int inStackPrecedence(const char& aToken) {
 		switch (aToken) {
@@ -146,7 +149,6 @@ public:
 			return -1;
 		}
 	}
-	virtual bool infixToPostfix() = 0;
 	double evaluates(const string& infixExpression) {
 		this->infixExpression = infixExpression;
 		if (infixExpression.size() == 0) {
@@ -220,15 +222,15 @@ class Conversion : public Infix2Postfix {
 					//2진수
 					if (i != infixExpression.size() - 1 && (expression[i + 1] == 'b' || expression[i + 1] == 'B')) {
 						i = i + 2;
-						vector<char> binaryVactor(0);
+						vector<char> binaryVector(0);
 						while (isdigit(expression[i])) {
-							int k = binaryVactor.size();
-							binaryVactor.resize(++k);
+							int k = binaryVector.size();
+							binaryVector.resize(++k);
 							currentToken = expression[i];
-							binaryVactor[k - 1] = currentToken;
+							binaryVector[k - 1] = currentToken;
 							i++;
 						}
-						string binaryV(binaryVactor.begin(), binaryVactor.end());
+						string binaryV(binaryVector.begin(), binaryVector.end());
 						string decimals = binaryToDecimal(binaryV);
 						const char* decimal = decimals.c_str();
 						for (int j = 0; j < decimals.size(); j++) {
@@ -238,17 +240,17 @@ class Conversion : public Infix2Postfix {
 
 					}
 					//16진수
-					else if (i != infixExpression.size() - 1 && (expression[i + 1] == 'x' || expression[i + 1] == 'B')) {
+					else if (i != infixExpression.size() - 1 && (expression[i + 1] == 'x' || expression[i + 1] == 'X')) {
 						i = i + 2;
-						vector<char> hexVactor(0);
+						vector<char> hexVector(0);
 						while ((expression[i] >= 'a' && expression[i] <= 'f') || isdigit(expression[i])) {
-							int k = hexVactor.size();
-							hexVactor.resize(++k);
+							int k = hexVector.size();
+							hexVector.resize(++k);
 							currentToken = expression[i];
-							hexVactor[k - 1] = currentToken;
+							hexVector[k - 1] = currentToken;
 							i++;
 						}
-						string binaryV(hexVactor.begin(), hexVactor.end());
+						string binaryV(hexVector.begin(), hexVector.end());
 						string hexs = hexToDecimal(binaryV);
 						const char* hex = hexs.c_str();
 						for (int j = 0; j < hexs.size(); j++) {
@@ -275,6 +277,10 @@ class Conversion : public Infix2Postfix {
 						postfixVector[p++] = poppedToken;
 						poppedToken = operatorStack.top();
 						operatorStack.pop();
+					}
+					if (poppedToken == NULL) {
+						cout << "MISSINGLEFTPAREN" << endl;
+						throw "Error";
 					}
 				}
 				else {
